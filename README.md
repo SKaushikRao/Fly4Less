@@ -13,5 +13,9 @@ else directly visit the landing page without signing in on
 
 https://fly4less-898ff.web.app/landing.html
 
+THE Z ICON on the right bottom corner is AI chatbot to assist you with navigating across the site.
+
+The payment gateway has  been taken care od by Stripe API using test keys. functionality may be limited.
+
 This project is made by - Team Kaoders
 S kaushik Rao & Gayahtri Sri Harshita
