@@ -1,0 +1,579 @@
+##iframe 1 ##
+function MainComponent() {
+  const [destinations, setDestinations] = useState([]);
+  const [error, setError] = useState(null);
+  const [timeLeft, setTimeLeft] = useState({});
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+  const [auth, setAuth] = useState(null);
+
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const response = await fetch("/api/get-destinations", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Error fetching destinations: ${response.statusText}`,
+          );
+        }
+        const data = await response.json();
+        setDestinations(data.destinations);
+      } catch (error) {
+        console.error(error);
+        setError("Failed to load destinations");
+      }
+    };
+    fetchDestinations();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        const updated = {};
+        destinations.forEach((dest) => {
+          const hours = Math.floor(Math.random() * 24);
+          const minutes = Math.floor(Math.random() * 60);
+          updated[dest.id] = `${hours}h ${minutes}m`;
+        });
+        return updated;
+      });
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [destinations]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPosition(window.scrollY);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initFirebase = async () => {
+      try {
+        const firebaseConfig = {
+          apiKey: "AIzaSyD-98rtJx7MmZbDmm41Pp3_sRYZ_7H8ZxI",
+          authDomain: "fly4less-898ff.firebaseapp.com",
+          projectId: "fly4less-898ff",
+          storageBucket: "fly4less-898ff.appspot.com",
+          messagingSenderId: "316842129134",
+          appId: "1:316842129134:web:d576bb29b0b277721765ff",
+          measurementId: "G-540BLNSDT7",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const authInstance = getAuth(app);
+        setAuth(authInstance);
+        setFirebaseInitialized(true);
+
+        onAuthStateChanged(authInstance, (user) => {
+          setUser(user);
+          console.log("Auth state changed:", user);
+        });
+      } catch (error) {
+        console.error("Error initializing Firebase:", error);
+        setError("Failed to initialize authentication");
+      }
+    };
+    if (!firebaseInitialized) {
+      initFirebase();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const script = document.createElement("script");
+      script.src = "https://joyz.ai/lib/chatbot.bundle.js";
+      script.setAttribute("eid", "67b7e5b01bb05e412d492c73");
+      script.setAttribute("chatbotId", "c79ccad8-4c29-4673-b59e-525acec37e66");
+      document.head.appendChild(script);
+
+      return () => {
+        document.head.removeChild(script);
+      };
+    }
+  }, []);
+
+  const handleSignIn = async () => {
+    if (!firebaseInitialized) {
+      console.log("Firebase not yet initialized");
+      setError(
+        "Authentication system is still initializing. Please try again in a moment.",
+      );
+      return;
+    }
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: "select_account",
+      });
+      const result = await signInWithPopup(auth, provider);
+      console.log("Successfully signed in:", result.user);
+    } catch (error) {
+      console.error("Error signing in:", error);
+      setError("Failed to sign in with Google. Please try again.");
+    }
+  };
+  const handleSignOut = async () => {
+    if (!firebaseInitialized) {
+      setError("Authentication system is not initialized");
+      return;
+    }
+    try {
+      await signOut(auth);
+      console.log("Successfully signed out");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      setError("Failed to sign out. Please try again.");
+    }
+  };
+
+  return (
+    <div className="font-sans">
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+          {error}
+        </div>
+      )}
+
+      <nav className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-20">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <img
+                  className="h-12 w-12"
+                  src="/fly4less-logo.png"
+                  alt="Fly4Less Logo"
+                />
+              </div>
+              <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
+                <a
+                  href="/flights"
+                  className="text-gray-900 inline-flex items-center px-3 pt-1 border-b-2 border-transparent text-lg font-medium hover:border-blue-500"
+                >
+                  Flights
+                </a>
+                <a
+                  href="/hotels"
+                  className="text-gray-900 inline-flex items-center px-3 pt-1 border-b-2 border-transparent text-lg font-medium hover:border-blue-500"
+                >
+                  Hotels
+                </a>
+                <a
+                  href="/deals"
+                  className="text-gray-900 inline-flex items-center px-3 pt-1 border-b-2 border-transparent text-lg font-medium hover:border-blue-500"
+                >
+                  Deals
+                </a>
+              </div>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-6">
+              <a
+                href="/about"
+                className="text-gray-900 inline-flex items-center px-3 pt-1 border-b-2 border-transparent text-lg font-medium hover:border-blue-500"
+              >
+                About Fly4Less
+              </a>
+              <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                {user ? (
+                  <div className="flex items-center space-x-2">
+                    {user.photoURL ? (
+                      <img
+                        className="h-8 w-8 rounded-full"
+                        src={user.photoURL}
+                        alt={user.displayName}
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                        {user.displayName?.charAt(0) || user.email?.charAt(0)}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.displayName || user.email}
+                    </span>
+                    <button
+                      onClick={handleSignOut}
+                      className="text-sm text-red-600 hover:text-red-800"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSignIn}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    <img
+                      src="/google-logo.png"
+                      alt="Google"
+                      className="h-5 w-5 mr-2"
+                    />
+                    Login with Google
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div className="relative h-screen w-full overflow-hidden">
+        <iframe
+          src="https://my.spline.design/chillingteacopy-029922686549d20ac57e3b12b17c01ac/"
+          frameborder="0"
+          width="100%"
+          height="100%"
+          className="absolute inset-0 z-0"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-30 z-10" />
+
+        <div className="relative h-full flex flex-col items-center justify-center px-4 md:px-8 z-20">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl text-white font-playfair text-center mb-12 drop-shadow-lg">
+            Fly4Less: Luxury Travel at Unbelievable Prices
+          </h1>
+
+          <div className="w-full max-w-3xl">
+            <div className="relative">
+              <input
+                type="text"
+                name="search"
+                placeholder="Search your dream destination..."
+                className="w-full px-8 py-6 text-xl rounded-full bg-white bg-opacity-95 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 
+                  placeholder-gray-500 text-gray-800 shadow-xl"
+              />
+              <button
+                className="absolute right-3 top-1/2 transform -translate-y-1/2
+                  bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full
+                  transition duration-200 ease-in-out text-lg font-medium"
+              >
+                <i className="fas fa-search mr-2" />
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section className="py-12 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
+                Fly4Less Featured Deals
+              </h2>
+              <p className="text-lg text-gray-600">
+                Exclusive offers from your most trusted travel partner
+              </p>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  const container = document.getElementById("deals-carousel");
+                  container.scrollBy({ left: -300, behavior: "smooth" });
+                }}
+              >
+                ←
+              </button>
+              <button
+                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  const container = document.getElementById("deals-carousel");
+                  container.scrollBy({ left: 300, behavior: "smooth" });
+                }}
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          <div
+            id="deals-carousel"
+            className="flex overflow-x-auto space-x-6 pb-6 -mx-4 px-4 scroll-smooth hide-scrollbar"
+            style={{ scrollSnapType: "x mandatory" }}
+          >
+            {destinations.map((destination) => (
+              <div
+                key={destination.id}
+                className="relative flex-none w-[300px] transform transition-all duration-300 hover:-translate-y-2"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <div className="relative bg-white rounded-xl overflow-hidden shadow-lg">
+                  <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                    <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                      Limited Time!
+                    </div>
+                    <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                      {Math.floor(
+                        (1 -
+                          destination.discounted_price /
+                            destination.original_price) *
+                          100,
+                      )}
+                      % OFF
+                    </div>
+                  </div>
+
+                  <div className="relative h-[200px]">
+                    <img
+                      src={destination.image_url}
+                      alt={destination.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-20" />
+                  </div>
+
+                  <div className="p-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {destination.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {destination.description}
+                    </p>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <span className="text-gray-500 line-through text-sm">
+                          ₹
+                          {Math.round(
+                            destination.original_price * 75,
+                          ).toLocaleString("en-IN")}
+                        </span>
+                        <span className="ml-2 text-2xl font-bold text-blue-600">
+                          ₹
+                          {Math.round(
+                            destination.discounted_price * 75,
+                          ).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <div className="text-sm text-red-500 font-semibold animate-pulse">
+                        Ends in: {timeLeft[destination.id] || "24h 0m"}
+                      </div>
+                    </div>
+
+                    <button
+                      className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                      onClick={() => {
+                        window.location.href = `/booking-details?destinationId=${destination.id}`;
+                      }}
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <style jsx>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+      </section>
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-6">
+            Why Choose Fly4Less?
+          </h2>
+          <div className="flex flex-wrap justify-around">
+            <div className="flex items-center space-x-4">
+              <img
+                src="/expedia-logo.png"
+                alt="Expedia Partner"
+                className="h-12"
+              />
+              <img
+                src="/booking-logo.png"
+                alt="Booking.com Partner"
+                className="h-12"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-lg font-bold text-green-600">
+                100% Money Back Guarantee
+              </span>
+              <span className="text-lg font-bold text-green-600">
+                Secure Booking
+              </span>
+              <span className="text-lg font-bold text-yellow-500">
+                ★★★★★ 10,000+ happy travelers
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="py-12 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-6">
+            What Our Travelers Say About Fly4Less
+          </h2>
+          <div className="flex overflow-x-scroll space-x-4">
+            <div className="flex-shrink-0 w-80 bg-white p-4 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="/profile1.jpg"
+                  alt="Profile 1"
+                  className="h-12 w-12 rounded-full"
+                />
+                <div className="ml-4">
+                  <p className="text-lg font-bold">John Doe</p>
+                  <p className="text-yellow-500">★★★★★</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "Fly4Less made our dream vacation a reality! We saved over 70%
+                on our Maldives trip. The booking process was seamless, and the
+                customer service was exceptional. Can't wait to book our next
+                adventure!"
+              </p>
+            </div>
+            <div className="flex-shrink-0 w-80 bg-white p-4 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="/profile2.jpg"
+                  alt="Profile 2"
+                  className="h-12 w-12 rounded-full"
+                />
+                <div className="ml-4">
+                  <p className="text-lg font-bold">Sarah Johnson</p>
+                  <p className="text-yellow-500">★★★★★</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "I was skeptical about the amazing deals on Fly4Less, but
+                they're 100% legitimate! Just returned from a luxury Paris
+                getaway that would have cost triple elsewhere. Their service is
+                unmatched!"
+              </p>
+            </div>
+            <div className="flex-shrink-0 w-80 bg-white p-4 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="/profile3.jpg"
+                  alt="Profile 3"
+                  className="h-12 w-12 rounded-full"
+                />
+                <div className="ml-4">
+                  <p className="text-lg font-bold">Michael Chen</p>
+                  <p className="text-yellow-500">★★★★★</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "As a frequent traveler, I've tried many booking sites, but
+                Fly4Less is by far the best. Their deals are unbeatable, and the
+                vacation packages are perfectly organized. A game-changer in
+                travel!"
+              </p>
+            </div>
+            <div className="flex-shrink-0 w-80 bg-white p-4 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="/profile4.jpg"
+                  alt="Profile 4"
+                  className="h-12 w-12 rounded-full"
+                />
+                <div className="ml-4">
+                  <p className="text-lg font-bold">Emma Thompson</p>
+                  <p className="text-yellow-500">★★★★★</p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                "Thanks to Fly4Less, I took my dream vacation to Bali at an
+                incredible price. The exclusive deals and professional service
+                made everything perfect. Already planning my next trip!"
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <footer className="bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-8">
+            <img src="/fly4less-logo.png" alt="Fly4Less" className="h-12" />
+            <p className="text-xl font-bold text-gray-800">
+              Your Trusted Travel Partner Since 2010
+            </p>
+          </div>
+          <div className="flex justify-between">
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-500 hover:text-gray-900">
+                Terms
+              </a>
+              <a href="#" className="text-gray-500 hover:text-gray-900">
+                Refund Policy
+              </a>
+              <a href="#" className="text-gray-500 hover:text-gray-900">
+                Contact
+              </a>
+            </div>
+            <div className="flex space-x-4">
+              <img src="/visa-logo.png" alt="Visa" className="h-8" />
+              <img
+                src="/mastercard-logo.png"
+                alt="MasterCard"
+                className="h-8"
+              />
+              <img src="/paypal-logo.png" alt="PayPal" className="h-8" />
+            </div>
+          </div>
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-900">
+              Subscribe to Fly4Less Exclusive Deals
+            </h3>
+            <form className="mt-4 flex">
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </footer>
+
+      {destinations.map((destination) => (
+        <FakeViewersPopup
+          key={destination.id}
+          destinationName={destination.name}
+        />
+      ))}
+
+      <FakeViewersPopup destinationName="this exclusive deal" />
+      <FakeViewersPopup destinationName="our luxury packages" />
+      <FakeViewersPopup destinationName="these amazing offers" />
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
