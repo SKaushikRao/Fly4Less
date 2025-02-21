@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fly4Less - Travel Made Simple</title>
+  <style>
+    /* General Styles */
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom, #1e3a8a, #3b82f6);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between; /* Space between header and footer */
+      overflow-x: hidden;
+    }
+
+    /* Header Section */
+    .header {
+      text-align: center;
+      padding: 0.7rem 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid #d1d5db;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #1e3a8a;
+      font-family: 'Georgia', serif;
+      margin: 0;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+    }
+
+    /* Background Image */
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      opacity: 0.3;
+    }
+
+    /* Logo Animation */
+    @keyframes logo-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .logo-bounce {
+      animation: logo-bounce 3s ease-in-out infinite;
+    }
+
+    /* Main Content Container */
+    .main-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      padding: 2rem;
+    }
+
+    /* 3D Model Styling */
+    .model-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px; /* Same width as the login box */
+      height: 500px; /* Adjust height for visibility */
+      overflow: hidden;
+    }
+
+    .model-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Login Form Styling */
+    .login-container {
+      position: absolute;
+      top: 50%; /* Center vertically */
+      left: 50%; /* Center horizontally */
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      padding: 3rem;
+      width: 100%;
+      max-width: 500px; /* Same width as the 3D model */
+      text-align: center;
+      transition: transform 0.3s ease;
+      z-index: 10; /* Ensure the login box stays on top */
+    }
+
+    .login-container:hover {
+      transform: scale(1.02);
+    }
+
+    .login-container h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #3b82f6;
+      font-family: 'Georgia', serif;
+    }
+
+    .login-container p {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-container input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .login-container button.primary {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .login-container button.primary:hover {
+      background-color: #2563eb;
+      transform: scale(1.02);
+    }
+
+    .login-container button.google {
+      background-color: white;
+      color: #3b82f6;
+      border: 1px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .login-container button.google:hover {
+      background-color: #f3f4f6;
+      transform: scale(1.02);
+    }
+
+    .login-container button img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .login-container .divider {
+      display: flex;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+
+    .login-container .divider hr {
+      flex-grow: 1;
+      border: none;
+      height: 1px;
+      background-color: #d1d5db;
+    }
+
+    .login-container .divider span {
+      margin: 0 1rem;
+      color: #6b7280;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .error-message.active {
+      display: block;
+    }
+
+    /* Travel Quote */
+    .travel-quote {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 1px solid #d1d5db;
+      font-size: 1.5rem;
+      color: #1e3a8a;
+      font-style: italic;
+      font-family: 'Georgia', serif;
+    }
+
+    .travel-quote span {
+      font-weight: bold;
+      color: #3b82f6;
+      display: block;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="background"></div>
+
+  <!-- Header Section -->
+  <div class="header">
+    <h1>Fly<span style="color: #ff6347;">4</span>Less</h1>
+    <p>Your Journey Starts Here</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- 3D Model Container -->
+    <div class="model-container">
+      <iframe src='https://my.spline.design/airplanecopy-52d57c8606a4fb752804974c8b7c9135/' frameborder='0'></iframe>
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-container">
+      <h2>Welcome Back!</h2>
+      <p>Sign in to continue exploring amazing destinations.</p>
+
+      <!-- Login Form -->
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Enter your email" required />
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <button type="submit" class="primary">Sign In</button>
+        <div class="error-message" id="errorMessage"></div>
+      </form>
+
+      <div class="divider">
+        <hr />
+        <span>or</span>
+        <hr />
+      </div>
+
+      <!-- Google Login Button -->
+      <button id="googleLoginButton" class="google">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Icon" />
+        Continue with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- Travel Quote -->
+  <div class="travel-quote">
+    “The world is a book, and those who do not travel read only one page.” <br />
+    <span>— Saint Augustine</span>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-98rtJx7MmZbDmm41Pp3_sRYZ_7H8ZxI",
+      authDomain: "fly4less-898ff.firebaseapp.com",
+      projectId: "fly4less-898ff",
+      storageBucket: "fly4less-898ff.appspot.com",
+      messagingSenderId: "316842129134",
+      appId: "1:316842129134:web:d576bb29b0b277721765ff",
+      measurementId: "G-540BLNSDT7"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Function to handle Google login
+    function googleLogin() {
+      console.log("Triggering Google login...");
+
+      // Create a GoogleAuthProvider instance
+      const provider = new GoogleAuthProvider();
+
+      // Trigger Firebase login with a popup
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("Firebase login successful.");
+          const user = result.user;
+          console.log("User logged in:", user);
+          window.location.href = "/landing.html"; // Redirect to landing page
+        })
+        .catch((error) => {
+          console.error("Error during login:", error);
+          alert(`Login failed: ${error.message}`);
+        });
+    }
+
+    // Attach the googleLogin function to the button click
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("DOM fully loaded. Attaching event listeners...");
+      const loginButton = document.getElementById("googleLoginButton");
+      if (loginButton) {
+        loginButton.addEventListener("click", googleLogin);
+      } else {
+        console.error("Button with ID 'googleLoginButton' not found!");
+      }
+    });
+  </script>
+</body>
+</html>
